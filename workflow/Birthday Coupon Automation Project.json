@@ -1,0 +1,170 @@
+{
+  "name": "Birthday Coupon Automation Project",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const rawString = $input.first().json.data;\nconst clientes = JSON.parse(rawString);\n\nreturn clientes.map(cliente => ({\n  json: cliente\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        -144
+      ],
+      "id": "ce606d2d-b8b7-4f6d-a85c-56c8e79d69bc",
+      "name": "Parse Json string to Array"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const hoje = new Date();\nconst mesAtual = hoje.getMonth() + 1;\n\nconst birthday = $json.birthday;\nif (!birthday) {\n  return null;\n}\n\nconst mesCliente = new Date(birthday).getMonth() + 1;\n\nif (mesCliente === mesAtual) {\n  return $input.item;\n}\n\nreturn null;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -144
+      ],
+      "id": "ea4361c3-8b0d-482d-bdac-f41b09f111c4",
+      "name": "Filter Clients Celebrants"
+    },
+    {
+      "parameters": {
+        "url": "https://gist.githubusercontent.com/Pierre-Mendes/adac8a627d63a0060df5e73a6b2b199d/raw/0684e1433b913ab55948db257535fa2926b54904/fake_customers.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -400,
+        -144
+      ],
+      "id": "bb53f197-5180-40b7-b7d7-c4a8f78265ad",
+      "name": "GET Json Fake API"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "function gerarCupom(nome) {\n  const random = Math.floor(1000 + Math.random() * 9000);\n  const primeiroNome = nome.split(\" \")[0].toUpperCase();\n  return `NIVER-${primeiroNome}-${random}`;\n}\n\nconst nome = $json.name;\nconst email = $json.email;\nconst cupom = gerarCupom(nome);\n\nconst subject = \"🎉 Feliz aniversário! Aqui vai seu presente\";\nconst body = `Olá ${nome}! 🎂\n\nA equipe preparou um presente especial para você.\n\n🎁 Seu cupom de aniversário:\n${cupom}\n\nUse este cupom para ganhar um desconto exclusivo em nossa loja.\n\nMas corra! Ele é válido por 7 dias 😉\n\nFeliz aniversário! 🥳`;\n\nreturn {\n  json: {\n    ...$json,\n    cupom,\n    subject,\n    body\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -144
+      ],
+      "id": "bee61454-6944-4c2b-963c-5bf045d7b90c",
+      "name": "Generate coupon and Body e-mail"
+    },
+    {
+      "parameters": {
+        "fromEmail": "Cupons <pierretielmendes@gmail.com>",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.subject}}",
+        "emailFormat": "text",
+        "text": "={{$json.body}}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        -144
+      ],
+      "id": "9b1e4aaa-3741-4bd1-9277-fb9eb44e28af",
+      "name": "Send an Email",
+      "webhookId": "55104838-479d-4a3b-a07c-14fe322b6061",
+      "credentials": {
+        "smtp": {
+          "id": "Xye7nP3pkhk6xucU",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Parse Json string to Array": {
+      "main": [
+        [
+          {
+            "node": "Filter Clients Celebrants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Json Fake API": {
+      "main": [
+        [
+          {
+            "node": "Parse Json string to Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Clients Celebrants": {
+      "main": [
+        [
+          {
+            "node": "Generate coupon and Body e-mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate coupon and Body e-mail": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5eb20649-860b-41f7-a36c-b5077ade1fa9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "361d798b9ea8de83969887106957183d4689ba27e9028f661c40d11bc3b07c3c"
+  },
+  "id": "IsLwqewD2AWDQ2Ov",
+  "tags": [
+    {
+      "name": "automation",
+      "id": "NdKOueMGfQg5dKnS",
+      "updatedAt": "2026-02-15T17:46:43.005Z",
+      "createdAt": "2026-02-15T17:46:43.005Z"
+    },
+    {
+      "name": "testlab",
+      "id": "vTTPwPMetRXjlcZ1",
+      "updatedAt": "2026-02-15T17:46:53.927Z",
+      "createdAt": "2026-02-15T17:46:53.927Z"
+    },
+    {
+      "name": "study",
+      "id": "0C05asvl0HD0saB1",
+      "updatedAt": "2026-02-15T17:47:03.467Z",
+      "createdAt": "2026-02-15T17:47:03.467Z"
+    },
+    {
+      "name": "tests",
+      "id": "E2XmNloxIhz3UDVr",
+      "updatedAt": "2026-02-15T17:47:08.661Z",
+      "createdAt": "2026-02-15T17:47:08.661Z"
+    }
+  ]
+}
